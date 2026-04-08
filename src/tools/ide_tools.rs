@@ -451,7 +451,7 @@ impl Tool for GetProjectInfo {
     fn run(&self, _args: &HashMap<String, Value>, ctx: &ToolContext) -> ToolResult {
         let script = r#"Dim info As String = ""
 info = info + "Project: " + ProjectShellPath + Chr(10)
-info = info + "Xojo Version: " + XojoVersion + Chr(10)
+info = info + "Xojo Version: " + Str(XojoVersion) + Chr(10)
 info = info + "Current Location: " + Location + Chr(10)
 info = info + "Location Type: " + TypeOfCurrentLocation + Chr(10)
 info = info + "Selected Item: " + ProjectItem
