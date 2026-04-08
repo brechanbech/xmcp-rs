@@ -94,6 +94,23 @@ xmcp [OPTIONS]
 - `-d`, `--docs-path <PATH>` — Path to Xojo documentation directory (auto-detected if omitted)
 - `-h`, `--help` — Print help
 
+## Differences from the original XMCP
+
+This is a faithful port — same MCP protocol version (`2025-06-18`), same 22
+tools with identical names and parameters, same IDE Communicator Protocol v2
+over the Unix domain socket. It is a drop-in replacement.
+
+Notable differences:
+
+- **Binary name** is `xmcp` (lowercase) rather than `XMCP`
+- **No Xojo license required** — builds with the standard Rust toolchain
+- **usage-guide.md has a compiled-in fallback** — the original fails silently
+  if the file is missing next to the binary; the Rust version embeds a copy
+  at compile time so the MCP resource is always available. A file on disk
+  still takes priority, so you can edit it without rebuilding.
+- **CLI parsing** uses [clap](https://crates.io/crates/clap) rather than the
+  original's custom OptionParser. The flags are the same.
+
 ## Tools
 
 XMCP exposes 22 tools across four categories:

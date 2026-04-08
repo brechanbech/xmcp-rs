@@ -107,7 +107,8 @@ impl Tool for GetSystemLog {
         let output = match Command::new("log")
             .args([
                 "show",
-                &format!("--last {seconds}s"),
+                "--last",
+                &format!("{seconds}s"),
                 "--predicate",
                 &format!("process == \"{process_name}\""),
             ])
