@@ -45,7 +45,7 @@ pub fn ide_call(ctx: &ToolContext, script: &str, timeout: Duration) -> ToolResul
         Some(ide) => ide,
         None => {
             return ToolResult::failure(
-                "Xojo IDE is not connected. Start the IDE and restart XMCP.",
+                "Xojo IDE is not connected. Start the IDE and restart xmcp.",
             )
         }
     };

@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-pub const PROTOCOL_VERSION: &str = "2025-06-18";
-pub const SERVER_NAME: &str = "XMCP";
+pub const PROTOCOL_VERSION: &str = "2025-11-25";
+pub const SERVER_NAME: &str = "xmcp";
 pub const SERVER_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Debug, Clone, Copy)]

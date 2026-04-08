@@ -1,4 +1,4 @@
-# XMCP-rs
+# xmcp-rs
 
 An MCP (Model Context Protocol) server that gives AI assistants direct control
 over the Xojo IDE. Communicates via stdin/stdout JSON-RPC and forwards IDE
@@ -15,8 +15,8 @@ is licensed under the MIT License.
 ### 1. Build and install
 
 ```sh
-git clone https://codeberg.org/brechanbech/XMCP-rs.git
-cd XMCP-rs
+git clone https://codeberg.org/brechanbech/xmcp-rs.git
+cd xmcp-rs
 cargo install --path .
 ```
 
@@ -76,7 +76,7 @@ MCP log):
 
 1. Start the Xojo IDE and open your project
 2. Start a Claude Code session in the project directory
-3. Claude will automatically discover the 23 XMCP tools and the usage guide
+3. Claude will automatically discover the 23 xmcp tools and the usage guide
 
 ### 4. Download Xojo documentation (recommended)
 
@@ -135,15 +135,15 @@ xmcp [OPTIONS]
 - `-d`, `--docs-path <PATH>` — Path to Xojo documentation directory (auto-detected if omitted)
 - `-h`, `--help` — Print help
 
-## Differences from the original XMCP
+## Differences from the original
 
-This is a faithful port — same MCP protocol version (`2025-06-18`), same 22 original
-tools with identical names and parameters, same IDE Communicator Protocol v2
-over the Unix domain socket. It is a drop-in replacement.
+This is a drop-in replacement — same 22 original tools with identical names and
+parameters, same IDE Communicator Protocol v2 over the Unix domain socket,
+updated to MCP protocol version `2025-11-25`.
 
 Notable differences:
 
-- **Binary name** is `xmcp` (lowercase) rather than `XMCP`
+- **Binary name** is `xmcp`
 - **No Xojo license required** — builds with the standard Rust toolchain
 - **usage-guide.md has a compiled-in fallback** — the original fails silently
   if the file is missing next to the binary; the Rust version embeds a copy
@@ -154,7 +154,7 @@ Notable differences:
 
 ## Tools
 
-XMCP exposes 23 tools across four categories:
+xmcp exposes 23 tools across four categories:
 
 **IDE tools (17):** list_project_items, get_current_location, select_project_item,
 get_code, set_code, get_selected_text, set_selected_text, build_project,

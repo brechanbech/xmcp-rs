@@ -20,8 +20,8 @@ pub fn resources_list(exe_dir: &Path) -> Value {
     if guide_exists {
         resources.push(json!({
             "uri": "file://usage-guide.md",
-            "name": "XMCP Usage Guide",
-            "description": "Guide for AI assistants: XMCP capabilities, limitations, and fallback strategies for direct file editing.",
+            "name": "xmcp Usage Guide",
+            "description": "Guide for AI assistants: xmcp capabilities, limitations, and fallback strategies for direct file editing.",
             "mimeType": "text/markdown"
         }));
     }

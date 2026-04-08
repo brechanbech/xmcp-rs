@@ -1,26 +1,26 @@
-# XMCP Usage Guide for AI Assistants
+# xmcp Usage Guide for AI Assistants
 
-This file is automatically loaded as an MCP resource when you connect to XMCP. It describes XMCP's capabilities, known limitations, and how to choose the right approach for each task. You can edit this file to add project-specific notes or customise the guidance.
+This file is automatically loaded as an MCP resource when you connect to xmcp. It describes xmcp's capabilities, known limitations, and how to choose the right approach for each task. You can edit this file to add project-specific notes or customise the guidance.
 
 ---
 
-## Prerequisites — before using any XMCP tools
+## Prerequisites — before using any xmcp tools
 
-**XMCP cannot start Xojo IDE.** All tools communicate via a macOS domain socket (`/tmp/XojoIDE`) that Xojo IDE creates when it launches. If the IDE is not running, every tool call will fail with "IPC socket not found".
+**xmcp cannot start Xojo IDE.** All tools communicate via a macOS domain socket (`/tmp/XojoIDE`) that Xojo IDE creates when it launches. If the IDE is not running, every tool call will fail with "IPC socket not found".
 
 **The user must:**
 
 1. Start Xojo IDE manually
-2. Open the project they want to work with (File > Open) — XMCP cannot open projects
+2. Open the project they want to work with (File > Open) — xmcp cannot open projects
 3. Wait a few seconds after launch before the IPC socket is ready — if tools fail immediately after IDE start, ask the user to wait and retry
 
-**Do not attempt any XMCP tool calls until the user confirms that Xojo IDE is open and the project is loaded.**
+**Do not attempt any xmcp tool calls until the user confirms that Xojo IDE is open and the project is loaded.**
 
 ---
 
-## What XMCP can do
+## What xmcp can do
 
-XMCP gives you direct control over the Xojo IDE via 23 tools:
+xmcp gives you direct control over the Xojo IDE via 23 tools:
 
 - **Navigate**: `list_project_items`, `get_current_location`, `select_project_item`
 - **Read/write code**: `get_code`, `set_code`, `get_selected_text`, `set_selected_text`
@@ -52,7 +52,7 @@ This downloads `llms.txt` and `llms-full.txt` from `docs.xojo.com` into the auto
 
 ## Starting work on a new project — recommended first steps
 
-When you connect to a new Xojo project via XMCP:
+When you connect to a new Xojo project via xmcp:
 
 1. Call `get_project_info` to confirm the IDE is connected and get the project directory path
 2. Check whether `App` already has an `UnhandledException` handler (see below)
@@ -62,7 +62,7 @@ When you connect to a new Xojo project via XMCP:
 
 ## Crash reporting — add UnhandledException to App
 
-In built apps, runtime exceptions are silent unless you add an `UnhandledException` handler. Without it, crashes produce no output visible to XMCP.
+In built apps, runtime exceptions are silent unless you add an `UnhandledException` handler. Without it, crashes produce no output visible to xmcp.
 
 Add this to `App.xojo_code` (before the `#tag ViewBehavior` section):
 
@@ -160,7 +160,7 @@ The Xojo IDE accepts only one IPC connection at a time. Always use sequential to
 
 ### IPC socket timing after navigation
 
-After certain navigation operations, the IDE briefly closes its IPC socket (~2–3 seconds). XMCP retries automatically. If a tool times out immediately after navigation, retry once.
+After certain navigation operations, the IDE briefly closes its IPC socket (~2–3 seconds). xmcp retries automatically. If a tool times out immediately after navigation, retry once.
 
 ---
 
@@ -177,7 +177,7 @@ Always wait for the user's answer before proceeding. Asking a question and then 
 ### Recommended workflow when the user asks to build
 
 1. **Offer to run first**: Before building, offer to call `run_project` to catch syntax and runtime errors. Build does not catch all errors that run will catch.
-2. **Run and ask for feedback**: After `run_project` returns, always ask the user if they see any errors or exceptions in the IDE — XMCP cannot see runtime behaviour in debug mode.
+2. **Run and ask for feedback**: After `run_project` returns, always ask the user if they see any errors or exceptions in the IDE — xmcp cannot see runtime behaviour in debug mode.
 3. **Only build if run succeeds** — or if the user explicitly wants to build anyway.
 
 ### What run_project and build_project can and cannot see
@@ -203,7 +203,7 @@ If no build output is found, use this reliable fallback:
 
 ### Debug mode vs. built app — exception visibility
 
-| Scenario | Exceptions visible to XMCP? | Where to look |
+| Scenario | Exceptions visible to xmcp? | Where to look |
 | --- | --- | --- |
 | `run_project` (debug mode) | No | User sees them in Xojo IDE debugger |
 | Built app with `UnhandledException` | Yes — via `get_debug_log` | `/tmp/xmcp_debug.log` |
@@ -211,7 +211,7 @@ If no build output is found, use this reliable fallback:
 
 ---
 
-## Tips for working effectively with XMCP
+## Tips for working effectively with xmcp
 
 - Call `get_project_info` early to understand the project structure and get the directory path
 - Use `list_project_items` to explore the project tree before navigating

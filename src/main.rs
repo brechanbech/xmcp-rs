@@ -42,7 +42,7 @@ fn main() {
     let all_tools = tools::all_tools();
 
     if cli.verbose {
-        eprintln!("XMCP server configured with {} tools.", all_tools.len());
+        eprintln!("xmcp server configured with {} tools.", all_tools.len());
     }
 
     let server = mcp::server::Server::new(all_tools, Some(ide), docs_path, exe_dir, cli.verbose);

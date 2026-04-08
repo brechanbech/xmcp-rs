@@ -16,7 +16,7 @@ pub struct GetDebugLog;
 impl Tool for GetDebugLog {
     fn name(&self) -> &'static str { "get_debug_log" }
     fn description(&self) -> &'static str {
-        "Reads the XMCP debug log file at /tmp/xmcp_debug.log \
+        "Reads the xmcp debug log file at /tmp/xmcp_debug.log \
          (written by App.UnhandledException handlers). Returns exception details \
          or empty message if no log exists."
     }
