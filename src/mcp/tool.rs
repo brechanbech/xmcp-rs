@@ -121,8 +121,11 @@ pub fn validate_arguments(
     let params = tool.parameters();
 
     // Check required parameters are present and types match.
+    // Null values are treated as absent (the parameter was not provided).
     for param in params {
-        if let Some(value) = args.get(param.name) {
+        if let Some(value) = args.get(param.name)
+            && !value.is_null()
+        {
             let arg_type = type_from_value(value);
             if !compatible(param.param_type, arg_type) {
                 return Err(format!(

@@ -11,7 +11,6 @@ const RETRY_PAUSE: Duration = Duration::from_millis(1000);
 pub struct Communicator {
     tag_counter: AtomicU64,
     verbose: bool,
-    last_error: std::sync::Mutex<String>,
 }
 
 impl Communicator {
@@ -19,19 +18,7 @@ impl Communicator {
         Self {
             tag_counter: AtomicU64::new(0),
             verbose,
-            last_error: std::sync::Mutex::new(String::new()),
         }
-    }
-
-    #[allow(dead_code)]
-    pub fn last_error_message(&self) -> String {
-        self.last_error.lock().unwrap().clone()
-    }
-
-    /// Send an IDE script and receive the response. Uses the default 10s timeout.
-    #[allow(dead_code)]
-    pub fn send_and_receive(&self, script: &str) -> Result<Value, String> {
-        self.send_and_receive_with_timeout(script, Duration::from_secs(10))
     }
 
     /// Send an IDE script and receive the response with a custom timeout.
@@ -72,7 +59,6 @@ impl Communicator {
 
                 match self.try_send_receive(path, &payload, &tag, timeout) {
                     Ok(response) => {
-                        *self.last_error.lock().unwrap() = String::new();
                         return Ok(response);
                     }
                     Err(e) => {
@@ -90,7 +76,6 @@ impl Communicator {
         } else {
             all_errors.join("; ")
         };
-        *self.last_error.lock().unwrap() = msg.clone();
         Err(msg)
     }
 
