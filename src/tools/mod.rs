@@ -10,7 +10,7 @@ use serde_json::Value;
 
 use crate::mcp::tool::{Tool, ToolContext, ToolResult};
 
-/// Return all 22 tools.
+/// Return all 23 tools.
 pub fn all_tools() -> Vec<Box<dyn Tool>> {
     vec![
         Box::new(ide_tools::ListProjectItems),
@@ -27,6 +27,7 @@ pub fn all_tools() -> Vec<Box<dyn Tool>> {
         Box::new(ide_tools::RunIdeScript),
         Box::new(ide_tools::GetProjectInfo),
         Box::new(ide_tools::RevertProject),
+        Box::new(ide_tools::SaveProject),
         Box::new(ide_tools::GetItemDescription),
         Box::new(ide_tools::ConstantValue),
         Box::new(doc_tools::SearchDocs::new()),

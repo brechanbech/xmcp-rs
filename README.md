@@ -76,13 +76,54 @@ MCP log):
 
 1. Start the Xojo IDE and open your project
 2. Start a Claude Code session in the project directory
-3. Claude will automatically discover the 22 XMCP tools and the usage guide
+3. Claude will automatically discover the 23 XMCP tools and the usage guide
+
+### 4. Download Xojo documentation (recommended)
+
+The documentation tools (`search_docs`, `lookup_class`, `list_doc_topics`) need
+a local copy of the Xojo docs. A script is included to download them from
+`docs.xojo.com`:
+
+```sh
+scripts/update-xojo-docs.sh
+```
+
+This downloads `llms.txt` and `llms-full.txt` from `docs.xojo.com` and splits
+the full documentation into individual class files under `_sources/`. Everything
+goes into `~/Library/Application Support/Xojo/Xojo/<version>/Documentation/`,
+which xmcp auto-detects at startup. Re-run the script periodically to pick up
+documentation updates — Xojo refreshes these files when new releases are
+published.
+
+To use a custom location instead:
+
+```sh
+scripts/update-xojo-docs.sh /path/to/docs
+xmcp --docs-path /path/to/docs
+```
 
 ## Requirements
 
 - macOS (the Xojo IDE IPC socket is macOS-specific)
 - Rust toolchain (`rustup` — https://rustup.rs)
 - Xojo IDE must be running with a project open before using any tools
+- **Accessibility permissions** — the `save_project` tool uses AppleScript to
+  send Cmd+S to the Xojo IDE, which requires the host app (Terminal, Claude Code,
+  etc.) to be granted accessibility access in System Settings > Privacy &
+  Security > Accessibility
+
+## Known issues
+
+### `save_project` uses AppleScript instead of IDE scripting
+
+Xojo's IDE scripting `DoCommand "Save"` does not persist newly created project
+items to disk — it reports success but only saves code changes to existing items.
+The `save_project` tool works around this by sending Cmd+S via AppleScript, which
+triggers the IDE's full save path.
+
+This is a Xojo IDE limitation as of 2026r1. If a future Xojo release fixes
+`DoCommand "Save"`, the `save_project` tool should be updated to use IDE
+scripting directly, which would remove the accessibility permission requirement.
 
 ## Options
 
@@ -96,7 +137,7 @@ xmcp [OPTIONS]
 
 ## Differences from the original XMCP
 
-This is a faithful port — same MCP protocol version (`2025-06-18`), same 22
+This is a faithful port — same MCP protocol version (`2025-06-18`), same 22 original
 tools with identical names and parameters, same IDE Communicator Protocol v2
 over the Unix domain socket. It is a drop-in replacement.
 
@@ -113,12 +154,12 @@ Notable differences:
 
 ## Tools
 
-XMCP exposes 22 tools across four categories:
+XMCP exposes 23 tools across four categories:
 
-**IDE tools (16):** list_project_items, get_current_location, select_project_item,
+**IDE tools (17):** list_project_items, get_current_location, select_project_item,
 get_code, set_code, get_selected_text, set_selected_text, build_project,
 run_project, stop_project, create_project_item, run_ide_script, get_project_info,
-revert_project, get_item_description, constant_value
+revert_project, save_project, get_item_description, constant_value
 
 **Documentation tools (3):** search_docs, lookup_class, list_doc_topics
 

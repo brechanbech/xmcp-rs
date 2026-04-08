@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::process::Command;
 use std::time::Duration;
 
 use serde_json::Value;
@@ -494,6 +495,44 @@ CloseProject(False)
 OpenFile path
 Print "Project reloaded from disk.""#;
         ide_call(ctx, script, Duration::from_secs(15))
+    }
+}
+
+// ---------------------------------------------------------------------------
+// save_project
+// ---------------------------------------------------------------------------
+pub struct SaveProject;
+
+impl Tool for SaveProject {
+    fn name(&self) -> &'static str { "save_project" }
+    fn description(&self) -> &'static str {
+        "Saves the current Xojo project to disk. Uses AppleScript to send Cmd+S \
+         to the IDE, which reliably persists all changes including newly created items."
+    }
+    fn parameters(&self) -> &[ToolParam] { &[] }
+    fn run(&self, _args: &HashMap<String, Value>, _ctx: &ToolContext) -> ToolResult {
+        let script = r#"tell application "Xojo" to activate
+delay 0.3
+tell application "System Events"
+    keystroke "s" using command down
+end tell
+delay 0.5"#;
+
+        match Command::new("osascript").arg("-e").arg(script).output() {
+            Ok(output) => {
+                if output.status.success() {
+                    ToolResult::success("Project saved.")
+                } else {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    ToolResult::failure(format!(
+                        "Save failed: {stderr}. \
+                         Ensure Xojo IDE is running and accessibility permissions \
+                         are granted for the terminal or Claude Code."
+                    ))
+                }
+            }
+            Err(e) => ToolResult::failure(format!("Failed to run osascript: {e}")),
+        }
     }
 }
 

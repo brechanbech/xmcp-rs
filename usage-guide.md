@@ -20,17 +20,33 @@ This file is automatically loaded as an MCP resource when you connect to XMCP. I
 
 ## What XMCP can do
 
-XMCP gives you direct control over the Xojo IDE via 22 tools:
+XMCP gives you direct control over the Xojo IDE via 23 tools:
 
 - **Navigate**: `list_project_items`, `get_current_location`, `select_project_item`
 - **Read/write code**: `get_code`, `set_code`, `get_selected_text`, `set_selected_text`
 - **Build and run**: `build_project`, `run_project`, `stop_project`
 - **Create items**: `create_project_item`
-- **Inspect and modify**: `get_item_description`, `constant_value`, `get_project_info`, `revert_project`
+- **Inspect and modify**: `get_item_description`, `constant_value`, `get_project_info`, `revert_project`, `save_project`
 - **IDE scripting**: `run_ide_script` (escape hatch for anything not covered)
-- **Documentation**: `search_docs`, `lookup_class`, `list_doc_topics`
+- **Documentation**: `search_docs`, `lookup_class`, `list_doc_topics` *(require local docs — see below)*
 - **Debugging**: `get_debug_log`, `get_system_log`
 - **Cost estimation**: `estimate_request_cost` — call this proactively before broad or documentation-heavy tasks to check whether the approach is likely to be expensive, and to get suggestions for cheaper alternatives
+
+---
+
+## Documentation tools — setup required
+
+The documentation tools (`search_docs`, `list_doc_topics`, `lookup_class`) require a local copy of the Xojo documentation. If they return "Xojo documentation path not configured", the user needs to run:
+
+```sh
+scripts/update-xojo-docs.sh
+```
+
+This downloads `llms.txt` and `llms-full.txt` from `docs.xojo.com` into the auto-detected path. Once downloaded, restart xmcp and the tools will work.
+
+- `search_docs` — keyword search across the full documentation (`llms-full.txt`)
+- `list_doc_topics` — browse/filter the topic index (`llms.txt`)
+- `lookup_class` — look up a specific class by name from individual `_sources/*.rst.txt` files (fast, targeted reads)
 
 ---
 
