@@ -1,4 +1,5 @@
 use serde_json::Value;
+use std::collections::HashSet;
 use std::io::{Read, Write};
 use std::os::unix::net::UnixStream;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -7,6 +8,32 @@ use std::time::{Duration, Instant};
 const SOCKET_CANDIDATES: &[&str] = &["/tmp/XojoIDE", "/private/tmp/XojoIDE"];
 const MAX_RETRIES: u32 = 5;
 const RETRY_PAUSE: Duration = Duration::from_millis(1000);
+
+/// Deduplicate socket paths by canonical path.
+/// On macOS, /tmp is a symlink to /private/tmp, so both candidates resolve
+/// to the same socket. Without deduplication we waste a full timeout cycle
+/// on what is effectively a second attempt at the same socket.
+fn unique_socket_paths() -> Vec<&'static str> {
+    let mut seen = HashSet::new();
+    SOCKET_CANDIDATES
+        .iter()
+        .filter(|p| {
+            let canonical = std::fs::canonicalize(p)
+                .map(|c| c.to_string_lossy().to_string())
+                .unwrap_or_else(|_| p.to_string());
+            seen.insert(canonical)
+        })
+        .copied()
+        .collect()
+}
+
+/// Classify whether an error is transient and worth retrying.
+fn is_retryable(err: &str) -> bool {
+    err.contains("not found")
+        || err.contains("Connection refused")
+        || err.contains("(timeout)")
+        || err.contains("connection closed")
+}
 
 pub struct Communicator {
     tag_counter: AtomicU64,
@@ -38,22 +65,24 @@ impl Communicator {
         payload.extend_from_slice(request.to_string().as_bytes());
         payload.push(0); // NUL terminator
 
+        let candidates = unique_socket_paths();
         let mut all_errors = Vec::new();
-        let mut all_socket_not_found = true;
+        let mut last_error_retryable = true;
 
         for attempt in 0..MAX_RETRIES {
             if attempt > 0 {
-                // Only retry if all prior errors were "socket not found".
-                if !all_socket_not_found {
+                if !last_error_retryable {
                     break;
                 }
                 std::thread::sleep(RETRY_PAUSE);
             }
 
-            for path in SOCKET_CANDIDATES {
+            for path in &candidates {
                 if !std::path::Path::new(path).exists() {
                     let err = format!("IPC socket not found at: {path}");
                     all_errors.push(err);
+                    // "not found" is retryable — IDE may not have started yet.
+                    last_error_retryable = true;
                     continue;
                 }
 
@@ -62,9 +91,7 @@ impl Communicator {
                         return Ok(response);
                     }
                     Err(e) => {
-                        if !e.contains("not found") {
-                            all_socket_not_found = false;
-                        }
+                        last_error_retryable = is_retryable(&e);
                         all_errors.push(e);
                     }
                 }
