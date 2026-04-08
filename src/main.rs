@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use clap::Parser;
 
 #[derive(Parser)]
-#[command(name = "xmcp", about = "MCP server for controlling the Xojo IDE")]
+#[command(name = "xmcp", version, about = "MCP server for controlling the Xojo IDE")]
 struct Cli {
     /// Enable verbose logging to stderr
     #[arg(short, long)]
