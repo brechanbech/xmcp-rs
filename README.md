@@ -10,33 +10,42 @@ This is a Rust port of [XMCP](https://github.com/o3jvind/XMCP) by
 Øjvind Søgaard Andersen, originally written in Xojo. The original project
 is licensed under the MIT License.
 
-## Building
+## Quick start
+
+### 1. Build and install
 
 ```sh
+git clone https://codeberg.org/brechanbech/XMCP-rs.git
+cd XMCP-rs
 cargo install --path .
 ```
 
-The binary is installed to `~/.cargo/bin/xmcp`.
-
-## Usage
+This installs the `xmcp` binary to `~/.cargo/bin/xmcp`. If `~/.cargo/bin`
+is already on your `PATH` (the Rust installer adds it by default), you're
+done. Verify with:
 
 ```sh
-xmcp [OPTIONS]
+xmcp --help
 ```
 
-### Options
+You also need to place `usage-guide.md` next to the binary so that MCP
+clients can fetch it as a resource:
 
-- `-v`, `--verbose` — Enable verbose logging to stderr
-- `-d`, `--docs-path <PATH>` — Path to Xojo documentation directory (auto-detected if omitted)
+```sh
+cp usage-guide.md ~/.cargo/bin/
+```
 
-### Requirements
+### 2. Add to Claude Code
 
-- macOS (Unix domain socket to Xojo IDE)
-- Xojo IDE must be running with a project open
+Run this from any terminal:
 
-### Claude Code integration
+```sh
+claude mcp add xmcp -- xmcp
+```
 
-Add to your MCP configuration:
+Or add it manually to your Claude Code settings. Open the MCP config file
+(on macOS: `~/.claude/settings.json` or the project-level
+`.claude/settings.json`) and add:
 
 ```json
 {
@@ -48,6 +57,42 @@ Add to your MCP configuration:
   }
 }
 ```
+
+To enable verbose logging (written to stderr, visible in the Claude Code
+MCP log):
+
+```json
+{
+  "mcpServers": {
+    "xmcp": {
+      "command": "xmcp",
+      "args": ["-v"]
+    }
+  }
+}
+```
+
+### 3. Use it
+
+1. Start the Xojo IDE and open your project
+2. Start a Claude Code session in the project directory
+3. Claude will automatically discover the 22 XMCP tools and the usage guide
+
+## Requirements
+
+- macOS (the Xojo IDE IPC socket is macOS-specific)
+- Rust toolchain (`rustup` — https://rustup.rs)
+- Xojo IDE must be running with a project open before using any tools
+
+## Options
+
+```
+xmcp [OPTIONS]
+```
+
+- `-v`, `--verbose` — Enable verbose logging to stderr
+- `-d`, `--docs-path <PATH>` — Path to Xojo documentation directory (auto-detected if omitted)
+- `-h`, `--help` — Print help
 
 ## Tools
 
