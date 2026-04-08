@@ -116,11 +116,12 @@ impl Server {
         }
 
         match method {
-            "initialize" => Some(self.handle_initialize(id, request)),
+            "initialize" => Some(self.handle_initialize(id)),
             "tools/list" => Some(self.handle_tools_list(id)),
             "tools/call" => Some(self.handle_tools_call(id, request)),
             "resources/list" => Some(self.handle_resources_list(id)),
             "resources/read" => Some(self.handle_resources_read(id, request)),
+            "ping" => Some(JsonRpcResponse::success(id.clone(), json!({}))),
             m if m.starts_with("notifications/") => {
                 self.handle_notification(m, request.params.as_ref());
                 None
@@ -133,17 +134,9 @@ impl Server {
         }
     }
 
-    fn handle_initialize(&self, id: &Value, request: &JsonRpcRequest) -> JsonRpcResponse {
-        // Echo back the client's protocolVersion if provided, otherwise use ours.
-        let client_version = request
-            .params
-            .as_ref()
-            .and_then(|p| p.get("protocolVersion"))
-            .and_then(|v| v.as_str())
-            .unwrap_or(PROTOCOL_VERSION);
-
+    fn handle_initialize(&self, id: &Value) -> JsonRpcResponse {
         let result = json!({
-            "protocolVersion": client_version,
+            "protocolVersion": PROTOCOL_VERSION,
             "capabilities": {
                 "tools": {},
                 "resources": {}
@@ -207,13 +200,7 @@ impl Server {
                     "The `arguments` value is not a valid object.",
                 );
             }
-            None => {
-                return JsonRpcResponse::error(
-                    id.clone(),
-                    ErrorCode::InvalidParams,
-                    "Missing `arguments` key in tool call params.",
-                );
-            }
+            None => std::collections::HashMap::new(),
         };
 
         if let Err(msg) = validate_arguments(tool.as_ref(), &arguments) {
