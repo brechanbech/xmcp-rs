@@ -133,6 +133,7 @@ xmcp [OPTIONS]
 
 - `-v`, `--verbose` — Enable verbose logging to stderr
 - `-d`, `--docs-path <PATH>` — Path to Xojo documentation directory (auto-detected if omitted)
+- `-V`, `--version` — Print version
 - `-h`, `--help` — Print help
 
 ## Differences from the original
