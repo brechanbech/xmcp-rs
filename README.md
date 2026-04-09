@@ -107,10 +107,7 @@ xmcp --docs-path /path/to/docs
 - macOS (the Xojo IDE IPC socket is macOS-specific)
 - Rust toolchain (`rustup` — https://rustup.rs)
 - Xojo IDE must be running with a project open before using any tools
-- **Accessibility permissions** — the `save_project` tool uses AppleScript to
-  send Cmd+S to the Xojo IDE, which requires the host app (Terminal, Claude Code,
-  etc.) to be granted accessibility access in System Settings > Privacy &
-  Security > Accessibility
+- **Accessibility permissions** — the `save_project` tool uses AppleScript to send Cmd+S to the Xojo IDE, which requires the host app (Terminal, Claude Code, etc.) to be granted accessibility access in System Settings > Privacy & Security > Accessibility
 
 ## Known issues
 
