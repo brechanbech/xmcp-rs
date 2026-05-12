@@ -4,6 +4,12 @@ An MCP (Model Context Protocol) server that gives AI assistants direct control
 over the Xojo IDE. Communicates via stdin/stdout JSON-RPC and forwards IDE
 commands via a Unix domain socket to the running Xojo IDE process.
 
+> **macOS only.** xmcp-rs talks to the Xojo IDE over its macOS-specific Unix
+> domain socket (`/tmp/XojoIDE`), and the `save_project` fallback uses
+> AppleScript via `osascript`. Windows and Linux are not supported and there
+> is no plan to add support — the underlying IDE IPC mechanism doesn't exist
+> on those platforms.
+
 ## Attribution
 
 This is a Rust port of [XMCP](https://github.com/o3jvind/XMCP) by
