@@ -7,7 +7,6 @@ use std::time::{Duration, Instant};
 
 const SOCKET_CANDIDATES: &[&str] = &["/tmp/XojoIDE", "/private/tmp/XojoIDE"];
 const MAX_RETRIES: u32 = 5;
-const RETRY_PAUSE: Duration = Duration::from_millis(1000);
 
 /// Deduplicate socket paths by canonical path.
 /// On macOS, /tmp is a symlink to /private/tmp, so both candidates resolve
@@ -33,6 +32,13 @@ fn is_retryable(err: &str) -> bool {
         || err.contains("Connection refused")
         || err.contains("(timeout)")
         || err.contains("connection closed")
+}
+
+/// Exponential backoff between retry attempts: 100, 200, 400, 800 ms ...
+/// The shift is capped to keep the helper safe if MAX_RETRIES is ever raised.
+fn retry_pause(attempt: u32) -> Duration {
+    let shift = attempt.saturating_sub(1).min(6);
+    Duration::from_millis(100u64 << shift)
 }
 
 pub struct Communicator {
@@ -74,7 +80,7 @@ impl Communicator {
                 if !last_error_retryable {
                     break;
                 }
-                std::thread::sleep(RETRY_PAUSE);
+                std::thread::sleep(retry_pause(attempt));
             }
 
             for path in &candidates {
