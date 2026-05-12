@@ -72,7 +72,8 @@ pub fn extract_response(response: &Value) -> ToolResult {
         }
         Some(other) => ToolResult::success(other.to_string()),
         None => ToolResult::failure(format!(
-            "Unexpected response from IDE: {response}"
+            "Unexpected response from IDE: {}",
+            truncate_for_error(&response.to_string(), 200)
         )),
     }
 }
@@ -96,4 +97,48 @@ pub fn arg_bool(args: &HashMap<String, Value>, name: &str, default: bool) -> boo
     args.get(name)
         .and_then(|v| v.as_bool())
         .unwrap_or(default)
+}
+
+/// Cap a string for inclusion in a user-facing error. Clips to `cap` bytes
+/// on a UTF-8 char boundary and appends an ellipsis plus the original size.
+fn truncate_for_error(s: &str, cap: usize) -> String {
+    if s.len() <= cap {
+        s.to_string()
+    } else {
+        let mut end = cap;
+        while !s.is_char_boundary(end) {
+            end -= 1;
+        }
+        format!("{}… ({} bytes total)", &s[..end], s.len())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::truncate_for_error;
+
+    #[test]
+    fn short_input_passes_through() {
+        assert_eq!(truncate_for_error("hello", 200), "hello");
+    }
+
+    #[test]
+    fn long_ascii_input_is_clipped() {
+        let input = "a".repeat(500);
+        let out = truncate_for_error(&input, 200);
+        assert!(out.starts_with(&"a".repeat(200)));
+        assert!(out.ends_with("… (500 bytes total)"));
+    }
+
+    #[test]
+    fn clip_lands_on_char_boundary() {
+        // 'é' is 2 bytes in UTF-8; place one straddling the cap.
+        let mut input = "a".repeat(199);
+        input.push_str("é");           // bytes 199, 200
+        input.push_str(&"b".repeat(50));
+        let out = truncate_for_error(&input, 200);
+        // Cap 200 falls inside the multi-byte char → boundary walked back to 199.
+        assert!(out.starts_with(&"a".repeat(199)));
+        assert!(out.contains("… ("));
+    }
 }
