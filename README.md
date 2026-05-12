@@ -144,9 +144,10 @@ xmcp [OPTIONS]
 
 ## Differences from the original
 
-This is a drop-in replacement — same 22 original tools with identical names and
-parameters, same IDE Communicator Protocol v2 over the Unix domain socket,
-updated to MCP protocol version `2025-11-25`.
+This is a drop-in replacement — all 22 original tools are preserved with
+identical names and parameters, plus one new tool (`estimate_request_cost`)
+for a total of 23. Same IDE Communicator Protocol v2 over the Unix domain
+socket, updated to MCP protocol version `2025-11-25`.
 
 Notable differences:
 
