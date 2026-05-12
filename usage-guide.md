@@ -215,7 +215,7 @@ If no build output is found, use this reliable fallback:
 
 - Call `get_project_info` early to understand the project structure and get the directory path
 - Use `list_project_items` to explore the project tree before navigating
-- Use `run_ide_script` to run arbitrary IDE scripting commands when no dedicated tool exists
+- Use `run_ide_script` to run arbitrary IDE scripting commands when no dedicated tool exists. Treat it as a power tool: an IDE script can quit Xojo, close or modify the project, delete items, and invoke shell commands via `DoShellCommand`. Prefer a dedicated tool when one fits, and pause before running anything destructive.
 - Use `get_system_log` to retrieve `System.DebugLog` output — works for both debug builds (`AppName.debug`) and built apps (`AppName`)
 
 ---

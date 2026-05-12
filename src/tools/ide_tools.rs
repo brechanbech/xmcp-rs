@@ -413,7 +413,12 @@ impl Tool for RunIdeScript {
     fn name(&self) -> &'static str { "run_ide_script" }
     fn description(&self) -> &'static str {
         "Executes an arbitrary Xojo IDE script. Use Print to return values. \
-         Escape hatch for commands not covered by other tools."
+         Powerful escape hatch — IDE scripting can quit Xojo, close/reopen \
+         projects, create or delete items, write files, and invoke shell \
+         commands via DoShellCommand. Prefer a dedicated tool when one fits \
+         (list_project_items, get_code, build_project, etc.); use this only \
+         when nothing else does, and pause before running anything that \
+         quits the IDE, deletes items, or touches the shell."
     }
     fn parameters(&self) -> &[ToolParam] {
         static P: &[ToolParam] = &[ToolParam {
