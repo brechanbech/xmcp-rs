@@ -129,7 +129,8 @@ impl Communicator {
 
         // Read response frames until we find one with our tag.
         let deadline = Instant::now() + timeout;
-        let mut buffer = Vec::new();
+        let mut buffer: Vec<u8> = Vec::with_capacity(8192);
+        let mut cursor: usize = 0;
         let mut read_buf = [0u8; 4096];
 
         loop {
@@ -152,15 +153,14 @@ impl Communicator {
                 }
             }
 
-            // Check for NUL-delimited frames.
-            while let Some(nul_pos) = buffer.iter().position(|&b| b == 0) {
-                let frame_bytes = buffer[..nul_pos].to_vec();
-                buffer = buffer[nul_pos + 1..].to_vec();
-
-                let frame_str = std::str::from_utf8(&frame_bytes)
+            // Consume NUL-delimited frames in place, advancing a cursor rather
+            // than reallocating the buffer per frame.
+            while let Some(rel_pos) = buffer[cursor..].iter().position(|&b| b == 0) {
+                let frame_end = cursor + rel_pos;
+                let frame_str = std::str::from_utf8(&buffer[cursor..frame_end])
                     .map_err(|e| format!("Invalid UTF-8 in IPC frame: {e}"))?
-                    .trim()
-                    .to_string();
+                    .trim();
+                cursor = frame_end + 1;
 
                 if frame_str.is_empty() {
                     continue;
@@ -170,13 +170,21 @@ impl Communicator {
                     eprintln!("IDE response frame: {frame_str}");
                 }
 
-                let response: Value = serde_json::from_str(&frame_str)
+                let response: Value = serde_json::from_str(frame_str)
                     .map_err(|e| format!("Invalid JSON in IPC frame: {e}"))?;
 
                 if response.get("tag").and_then(|t| t.as_str()) == Some(tag) {
                     return Ok(response);
                 }
                 // Not our tag — discard orphaned frame and keep reading.
+            }
+
+            // Periodic compaction: reclaim consumed prefix once it dominates
+            // the buffer. Bounded total shift cost — each byte moves at most
+            // once between compactions, keeping the loop O(n) amortized.
+            if cursor > 4096 && cursor * 2 > buffer.len() {
+                buffer.drain(..cursor);
+                cursor = 0;
             }
         }
     }
