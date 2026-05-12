@@ -34,8 +34,10 @@ done. Verify with:
 xmcp --help
 ```
 
-You also need to place `usage-guide.md` next to the binary so that MCP
-clients can fetch it as a resource:
+**Optional:** `usage-guide.md` is embedded into the binary at compile
+time, so the MCP resource is always available out of the box. If you
+want to tweak the guide without rebuilding, drop a copy next to the
+binary — xmcp will prefer the file on disk over the embedded fallback:
 
 ```sh
 cp usage-guide.md ~/.cargo/bin/
