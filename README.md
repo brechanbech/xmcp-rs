@@ -107,20 +107,23 @@ xmcp --docs-path /path/to/docs
 - macOS (the Xojo IDE IPC socket is macOS-specific)
 - Rust toolchain (`rustup` — https://rustup.rs)
 - Xojo IDE must be running with a project open before using any tools
-- **Accessibility permissions** — the `save_project` tool uses AppleScript to send Cmd+S to the Xojo IDE, which requires the host app (Terminal, Claude Code, etc.) to be granted accessibility access in System Settings > Privacy & Security > Accessibility
+- **Accessibility permissions (only for the `save_project` fallback)** — `save_project` tries IDE scripting first and only falls back to AppleScript Cmd+S when the IDE doesn't actually persist the save (see Known issues). The fallback requires the host app (Terminal, Claude Code, etc.) to be granted accessibility access in System Settings > Privacy & Security > Accessibility. If the Xojo bug is ever fixed, the fallback simply stops firing and the permission is no longer needed.
 
 ## Known issues
 
-### `save_project` uses AppleScript instead of IDE scripting
+### `save_project` falls back to AppleScript when IDE scripting fails to persist
 
-Xojo's IDE scripting `DoCommand "Save"` does not persist newly created project
-items to disk — it reports success but only saves code changes to existing items.
-The `save_project` tool works around this by sending Cmd+S via AppleScript, which
-triggers the IDE's full save path.
+Xojo's IDE scripting `DoCommand "Save"` reports success but does not persist
+newly created project items to disk. The `save_project` tool tries IDE scripting
+first and verifies the save by checking whether the project file or its parent
+directory's modification time advanced. If verification fails, it falls back to
+sending Cmd+S via AppleScript, which triggers the IDE's full save path.
 
-This is a Xojo IDE limitation as of 2026r1. If a future Xojo release fixes
-`DoCommand "Save"`, the `save_project` tool should be updated to use IDE
-scripting directly, which would remove the accessibility permission requirement.
+Confirmed broken in Xojo 2026r1 and 2026r1.1. The fallback path requires
+accessibility permission and briefly brings the Xojo IDE window to the front.
+When a future Xojo release fixes `DoCommand "Save"`, the fallback will simply
+stop firing — no code change required — and the accessibility permission will
+no longer be needed.
 
 ## Options
 

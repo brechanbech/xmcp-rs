@@ -1,6 +1,7 @@
 use std::collections::HashMap;
+use std::path::Path;
 use std::process::Command;
-use std::time::Duration;
+use std::time::{Duration, Instant, SystemTime};
 
 use serde_json::Value;
 
@@ -506,33 +507,91 @@ pub struct SaveProject;
 impl Tool for SaveProject {
     fn name(&self) -> &'static str { "save_project" }
     fn description(&self) -> &'static str {
-        "Saves the current Xojo project to disk. Uses AppleScript to send Cmd+S \
-         to the IDE, which reliably persists all changes including newly created items."
+        "Saves the current Xojo project to disk. Attempts IDE scripting first; \
+         falls back to Cmd+S via AppleScript only when needed (e.g. when Xojo's \
+         DoCommand \"Save\" fails to persist newly created project items)."
     }
     fn parameters(&self) -> &[ToolParam] { &[] }
-    fn run(&self, _args: &HashMap<String, Value>, _ctx: &ToolContext) -> ToolResult {
-        let script = r#"tell application "Xojo" to activate
+    fn run(&self, _args: &HashMap<String, Value>, ctx: &ToolContext) -> ToolResult {
+        let path_result = ide_call_default(ctx, "Print ProjectShellPath");
+        if path_result.is_error {
+            return path_result;
+        }
+        let project_path = path_result.output.trim().to_string();
+        if project_path.is_empty() {
+            return ToolResult::failure(
+                "ProjectShellPath was empty — is a project open in the Xojo IDE?",
+            );
+        }
+        let file_path = Path::new(&project_path).to_path_buf();
+        let dir_path = file_path.parent().map(|p| p.to_path_buf());
+
+        let baseline = (mtime(&file_path), dir_path.as_deref().and_then(mtime));
+
+        let ide_save = ide_call_default(ctx, "DoCommand \"Save\"\nPrint \"Saved\"");
+        if !ide_save.is_error
+            && mtime_changed(&file_path, dir_path.as_deref(), baseline, Duration::from_millis(500))
+        {
+            return ToolResult::success("Project saved (via IDE scripting).");
+        }
+
+        let osascript = r#"tell application "Xojo" to activate
 delay 0.3
 tell application "System Events"
     keystroke "s" using command down
-end tell
-delay 0.5"#;
+end tell"#;
 
-        match Command::new("osascript").arg("-e").arg(script).output() {
+        match Command::new("osascript").arg("-e").arg(osascript).output() {
             Ok(output) => {
-                if output.status.success() {
-                    ToolResult::success("Project saved.")
-                } else {
+                if !output.status.success() {
                     let stderr = String::from_utf8_lossy(&output.stderr);
-                    ToolResult::failure(format!(
+                    return ToolResult::failure(format!(
                         "Save failed: {stderr}. \
                          Ensure Xojo IDE is running and accessibility permissions \
                          are granted for the terminal or Claude Code."
-                    ))
+                    ));
                 }
             }
-            Err(e) => ToolResult::failure(format!("Failed to run osascript: {e}")),
+            Err(e) => return ToolResult::failure(format!("Failed to run osascript: {e}")),
         }
+
+        if mtime_changed(&file_path, dir_path.as_deref(), baseline, Duration::from_millis(2000)) {
+            ToolResult::success("Project saved (via Cmd+S fallback).")
+        } else {
+            ToolResult::success("No changes to save.")
+        }
+    }
+}
+
+fn mtime(path: &Path) -> Option<SystemTime> {
+    std::fs::metadata(path).and_then(|m| m.modified()).ok()
+}
+
+fn mtime_changed(
+    file: &Path,
+    dir: Option<&Path>,
+    baseline: (Option<SystemTime>, Option<SystemTime>),
+    budget: Duration,
+) -> bool {
+    let deadline = Instant::now() + budget;
+    loop {
+        let file_now = mtime(file);
+        let dir_now = dir.and_then(mtime);
+        if changed(file_now, baseline.0) || changed(dir_now, baseline.1) {
+            return true;
+        }
+        if Instant::now() >= deadline {
+            return false;
+        }
+        std::thread::sleep(Duration::from_millis(50));
+    }
+}
+
+fn changed(now: Option<SystemTime>, before: Option<SystemTime>) -> bool {
+    match (now, before) {
+        (Some(n), Some(b)) => n > b,
+        (Some(_), None) => true,
+        _ => false,
     }
 }
 
