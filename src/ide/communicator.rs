@@ -41,6 +41,25 @@ fn retry_pause(attempt: u32) -> Duration {
     Duration::from_millis(100u64 << shift)
 }
 
+/// Collapse repeated errors into "<err> (×N)" form while preserving the
+/// order distinct errors first appeared. Keeps the final retry-failure
+/// message readable when every attempt fails the same way.
+fn summarize_errors(errors: &[String]) -> String {
+    let mut summary: Vec<(String, usize)> = Vec::new();
+    for e in errors {
+        if let Some(entry) = summary.iter_mut().find(|(s, _)| s == e) {
+            entry.1 += 1;
+        } else {
+            summary.push((e.clone(), 1));
+        }
+    }
+    summary
+        .into_iter()
+        .map(|(s, n)| if n > 1 { format!("{s} (×{n})") } else { s })
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
 pub struct Communicator {
     tag_counter: AtomicU64,
     verbose: bool,
@@ -107,7 +126,7 @@ impl Communicator {
         let msg = if all_errors.is_empty() {
             "No IPC socket candidates found.".to_string()
         } else {
-            all_errors.join("; ")
+            summarize_errors(&all_errors)
         };
         Err(msg)
     }
@@ -198,5 +217,40 @@ impl Communicator {
     fn next_tag(&self) -> String {
         let n = self.tag_counter.fetch_add(1, Ordering::Relaxed);
         format!("xmcp_{n}")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::summarize_errors;
+
+    #[test]
+    fn collapses_identical_errors() {
+        let errs = vec!["socket not found".to_string(); 5];
+        assert_eq!(summarize_errors(&errs), "socket not found (×5)");
+    }
+
+    #[test]
+    fn preserves_first_seen_order_with_counts() {
+        let errs = vec![
+            "a".to_string(),
+            "b".to_string(),
+            "a".to_string(),
+            "b".to_string(),
+            "b".to_string(),
+        ];
+        assert_eq!(summarize_errors(&errs), "a (×2); b (×3)");
+    }
+
+    #[test]
+    fn singletons_have_no_count_suffix() {
+        let errs = vec!["only one".to_string()];
+        assert_eq!(summarize_errors(&errs), "only one");
+    }
+
+    #[test]
+    fn empty_input_returns_empty_string() {
+        let errs: Vec<String> = Vec::new();
+        assert_eq!(summarize_errors(&errs), "");
     }
 }
