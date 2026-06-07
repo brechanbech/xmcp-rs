@@ -136,6 +136,13 @@ Pick your approach based on what you're editing. Going down the wrong path alway
 4. **Reload in the IDE**
    Ask the user for permission, then call `revert_project`. The user may see a confirmation prompt in the IDE — they need to accept it.
 
+### Why this matters — two silent failure modes
+
+The IDE's in-memory copy is authoritative while the project is open. This creates two traps with no error message:
+
+- **Edit without revert → stale code runs.** If you modify a `.xojo_window` file but skip `revert_project`, the IDE keeps using its in-memory version. `run_project` and `build_project` silently use the old code — your edits have no effect and nothing reports a problem.
+- **Save overwrites disk edits.** `save_project` (and Cmd+S in the IDE) writes the in-memory copy back to disk, clobbering any direct file edits. When a change doesn't seem to take effect, the instinct to "just save it" destroys the edit. Always `revert_project` (disk → IDE), never save, after editing files directly.
+
 ---
 
 ## IDE tool limitations to be aware of
