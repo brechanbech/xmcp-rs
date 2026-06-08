@@ -5,8 +5,7 @@ over the Xojo IDE. Communicates via stdin/stdout JSON-RPC and forwards IDE
 commands via a Unix domain socket to the running Xojo IDE process.
 
 > **macOS only.** xmcp-rs talks to the Xojo IDE over its macOS-specific Unix
-> domain socket (`/tmp/XojoIDE`), and the `save_project` fallback uses
-> AppleScript via `osascript`. Windows and Linux are not supported and there
+> domain socket (`/tmp/XojoIDE`). Windows and Linux are not supported and there
 > is no plan to add support — the underlying IDE IPC mechanism doesn't exist
 > on those platforms.
 
@@ -115,7 +114,6 @@ xmcp --docs-path /path/to/docs
 - macOS (the Xojo IDE IPC socket is macOS-specific)
 - Rust toolchain (`rustup` — https://rustup.rs)
 - Xojo IDE must be running with a project open before using any tools
-- **Accessibility permissions (rarely needed)** — `save_project` saves via IDE scripting; it only falls back to AppleScript Cmd+S if that fails to persist, which requires the host app (Terminal, Claude Code, etc.) to have accessibility access in System Settings > Privacy & Security > Accessibility. In normal operation this fallback does not fire.
 
 ## Options
 

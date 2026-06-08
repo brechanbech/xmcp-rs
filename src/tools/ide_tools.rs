@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::path::Path;
-use std::process::Command;
 use std::time::{Duration, Instant, SystemTime};
 
 use serde_json::Value;
@@ -512,9 +511,8 @@ pub struct SaveProject;
 impl Tool for SaveProject {
     fn name(&self) -> &'static str { "save_project" }
     fn description(&self) -> &'static str {
-        "Saves the current Xojo project to disk. Uses IDE scripting \
-         (DoCommand \"SaveFile\"); falls back to Cmd+S via AppleScript only if \
-         that does not persist changes."
+        "Saves the current Xojo project to disk via IDE scripting \
+         (DoCommand \"SaveFile\")."
     }
     fn parameters(&self) -> &[ToolParam] { &[] }
     fn run(&self, _args: &HashMap<String, Value>, ctx: &ToolContext) -> ToolResult {
@@ -534,38 +532,14 @@ impl Tool for SaveProject {
         let baseline = (mtime(&file_path), dir_path.as_deref().and_then(mtime));
 
         // "SaveFile" is the documented DoCommand that saves the whole project with
-        // no prompt; despite the name it is project-wide, not per-file. (The older
-        // "Save"/"SaveProject" strings are not valid DoCommand parameters — Xojo
-        // returns success for them but writes nothing, which the Cmd+S fallback hid.)
+        // no prompt; despite the name it is project-wide, not per-file.
         let ide_save = ide_call_default(ctx, "DoCommand \"SaveFile\"\nPrint \"Saved\"");
-        if !ide_save.is_error
-            && mtime_changed(&file_path, dir_path.as_deref(), baseline, Duration::from_millis(500))
-        {
-            return ToolResult::success("Project saved (via IDE scripting).");
-        }
-
-        let osascript = r#"tell application "Xojo" to activate
-delay 0.3
-tell application "System Events"
-    keystroke "s" using command down
-end tell"#;
-
-        match Command::new("osascript").arg("-e").arg(osascript).output() {
-            Ok(output) => {
-                if !output.status.success() {
-                    let stderr = String::from_utf8_lossy(&output.stderr);
-                    return ToolResult::failure(format!(
-                        "Save failed: {stderr}. \
-                         Ensure Xojo IDE is running and accessibility permissions \
-                         are granted for the terminal or Claude Code."
-                    ));
-                }
-            }
-            Err(e) => return ToolResult::failure(format!("Failed to run osascript: {e}")),
+        if ide_save.is_error {
+            return ide_save;
         }
 
         if mtime_changed(&file_path, dir_path.as_deref(), baseline, Duration::from_millis(2000)) {
-            ToolResult::success("Project saved (via Cmd+S fallback).")
+            ToolResult::success("Project saved.")
         } else {
             ToolResult::success("No changes to save.")
         }
