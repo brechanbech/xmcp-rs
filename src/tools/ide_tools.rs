@@ -512,9 +512,9 @@ pub struct SaveProject;
 impl Tool for SaveProject {
     fn name(&self) -> &'static str { "save_project" }
     fn description(&self) -> &'static str {
-        "Saves the current Xojo project to disk. Attempts IDE scripting first; \
-         falls back to Cmd+S via AppleScript only when needed (e.g. when Xojo's \
-         DoCommand \"Save\" fails to persist newly created project items)."
+        "Saves the current Xojo project to disk. Uses IDE scripting \
+         (DoCommand \"SaveFile\"); falls back to Cmd+S via AppleScript only if \
+         that does not persist changes."
     }
     fn parameters(&self) -> &[ToolParam] { &[] }
     fn run(&self, _args: &HashMap<String, Value>, ctx: &ToolContext) -> ToolResult {
@@ -533,7 +533,11 @@ impl Tool for SaveProject {
 
         let baseline = (mtime(&file_path), dir_path.as_deref().and_then(mtime));
 
-        let ide_save = ide_call_default(ctx, "DoCommand \"Save\"\nPrint \"Saved\"");
+        // "SaveFile" is the documented DoCommand that saves the whole project with
+        // no prompt; despite the name it is project-wide, not per-file. (The older
+        // "Save"/"SaveProject" strings are not valid DoCommand parameters — Xojo
+        // returns success for them but writes nothing, which the Cmd+S fallback hid.)
+        let ide_save = ide_call_default(ctx, "DoCommand \"SaveFile\"\nPrint \"Saved\"");
         if !ide_save.is_error
             && mtime_changed(&file_path, dir_path.as_deref(), baseline, Duration::from_millis(500))
         {
