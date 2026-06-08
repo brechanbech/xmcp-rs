@@ -115,23 +115,7 @@ xmcp --docs-path /path/to/docs
 - macOS (the Xojo IDE IPC socket is macOS-specific)
 - Rust toolchain (`rustup` — https://rustup.rs)
 - Xojo IDE must be running with a project open before using any tools
-- **Accessibility permissions (only for the `save_project` fallback)** — `save_project` tries IDE scripting first and only falls back to AppleScript Cmd+S when the IDE doesn't actually persist the save (see Known issues). The fallback requires the host app (Terminal, Claude Code, etc.) to be granted accessibility access in System Settings > Privacy & Security > Accessibility. If the Xojo bug is ever fixed, the fallback simply stops firing and the permission is no longer needed.
-
-## Known issues
-
-### `save_project` falls back to AppleScript if IDE scripting fails to persist
-
-`save_project` saves via IDE scripting (`DoCommand "SaveFile"`, the documented
-command that saves the whole project with no prompt) and verifies it by checking
-whether the project file or its parent directory's modification time advanced. If
-verification fails, it falls back to sending Cmd+S via AppleScript, which triggers
-the IDE's full save path.
-
-Note: earlier versions sent `DoCommand "Save"`, which is **not** a valid
-`DoCommand` parameter — Xojo returns success for unrecognized command names but
-writes nothing, so the save silently relied on the Cmd+S fallback. The documented
-command is `SaveFile`. The fallback now exists only as a safety net; in normal
-operation it should not fire, so the accessibility permission is rarely needed.
+- **Accessibility permissions (rarely needed)** — `save_project` saves via IDE scripting; it only falls back to AppleScript Cmd+S if that fails to persist, which requires the host app (Terminal, Claude Code, etc.) to have accessibility access in System Settings > Privacy & Security > Accessibility. In normal operation this fallback does not fire.
 
 ## Options
 
