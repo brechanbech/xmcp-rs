@@ -6,7 +6,7 @@ license = "MIT"
 description = "MCP server for controlling the Xojo IDE"
 repository = "https://codeberg.org/brechanbech/xmcp-rs"
 readme = "README.md"
-keywords = ["mcp", "xojo", "ai", "model-context-protocol", "ide"]
+keywords = ["mcp", "xojo", "ai", "claude", "ide"]
 categories = ["development-tools", "command-line-utilities"]
 
 [dependencies]
